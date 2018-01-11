@@ -4,6 +4,7 @@ ar - create, modify, and extract from archives
 
 import re
 from ..Transformer import TransformerLlvm
+from ...config import LLVMAR
 from ...config import LLVMLINK
 
 
@@ -12,8 +13,11 @@ class TransformAr(TransformerLlvm):
 
     @staticmethod
     def can_be_applied_on(cmd):
-        return (cmd.bashcmd.startswith("ar ") and
-                re.search(r"ar [-]?[cruqs]+ [^ ]+\.a", cmd.bashcmd))
+        result = cmd.bashcmd.startswith("ar ") and \
+                 re.search(r"ar [-]?[cruqs]+ [^ ]+\.a", cmd.bashcmd)
+        result = result or cmd.bashcmd.startswith("/usr/bin/ar ") and \
+                 re.search(r"ar [-]?[qc]+ [^ ]+\.a", cmd.bashcmd)
+        return result
 
     @staticmethod
     def apply_transformation_on(cmd, container):
@@ -29,5 +33,6 @@ class TransformAr(TransformerLlvm):
         # transform all linked .o-files to the corresponding .bc-file
         tokens = [t[:-2] + ".bc" if t.endswith(".o") else t for t in tokens]
 
+        #cmd.bashcmd = LLVMAR + " " + " ".join(tokens)
         cmd.bashcmd = LLVMLINK + " " + " ".join(tokens)
         return cmd

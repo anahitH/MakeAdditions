@@ -68,7 +68,8 @@ class MakefileDirstack():
 def extract_debugshell(makeoutput):
     """ Extract all command invocations from shell debug statements and
     make them to normal commands """
-    return [line.lstrip("+ ") for line in makeoutput]
+    result = [line.lstrip("+ ") for line in makeoutput]
+    return result
 
 
 def get_relevant_lines(makeoutput):
@@ -169,9 +170,13 @@ def encapsulate_commands(cmdlist):
 def extract_dir_from_makecd(cmd):
     """ Extract the directory from a translated cd of makeoutput """
     assert is_make_cd_cmd(cmd)
-    return cmd[3:-len(" # " + MAKEANNOTATIONHINT)]
+    if cmd.endswith(" # " + MAKEANNOTATIONHINT):
+        return cmd[3:-len(" # " + MAKEANNOTATIONHINT)]
+    else:
+        return cmd[3:]
 
 
 def is_make_cd_cmd(cmd):
     """ Checks, if the given command is a translated make directory change """
-    return cmd.startswith("cd ") and cmd.endswith(" # " + MAKEANNOTATIONHINT)
+    return cmd.startswith("cd ")
+    # and cmd.endswith(" # " + MAKEANNOTATIONHINT)

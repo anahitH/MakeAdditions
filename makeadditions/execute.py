@@ -46,12 +46,17 @@ def run_make_with_debug_shell(makefile, targets):
     """ Run make and add all executed shell commands to the output """
 
     makedir = dirname(makefile)
-
-    output = check_output(
-        ('make --directory=%s --print-directory '
-         '--quiet SHELL="bash -x" ' % makedir) + " ".join(targets),
-        env=english_environment(), shell=True, stderr=STDOUT)
-
+    print("run make with debug shell in " + makedir)
+    cmd = "make --directory=%s --print-directory --quiet SHELL=\"bash -x\" " % makedir + " ".join(targets)
+    print(cmd)
+    output = "output"
+    try:
+        output = check_output(cmd,
+                              env=english_environment(), shell=True, stderr=STDOUT)
+    except CalledProcessError as err:
+        print("ops! ")
+        print(err.output)
+        print("output " + output)
     # finally return the decoded output of make
     return output.decode()
 
@@ -131,7 +136,7 @@ def check_opt_delete(opt, opt_delete_so):
 
     output = get_command_output([opt, "--load", opt_delete_so, "--help"])
     if not b"-deletefunction" in output:
-        raise Exception(error)
+        raise Exception("error")
 
 
 def check_llvmlink(llvmlink):

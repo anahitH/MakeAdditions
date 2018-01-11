@@ -28,7 +28,6 @@ class MakeLlvm(MakeScript):
     def transform(self, cmd):
         # get all relevant transformations
         relevant = directory.list_all_llvm_transformers()
-
         # filter for applicable transformations
         applicable = [transformer for transformer in relevant
                       if transformer.can_be_applied_on(cmd)]

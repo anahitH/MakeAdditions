@@ -5,8 +5,10 @@ object linker
 from os import path
 from ..Transformer import TransformerLlvm
 from ...config import LLVMLINK
+from ...config import LLVMAR
 from ...constants import OPTIMIZERFLAGS, EXECFILEEXTENSION, COMPILERS
 from ...helper import no_duplicates
+import filecmp
 
 
 class TransformCCLink(TransformerLlvm):
@@ -14,17 +16,18 @@ class TransformCCLink(TransformerLlvm):
 
     @staticmethod
     def can_be_applied_on(cmd):
-        return (
+        result = (
             any(cmd.bashcmd.startswith(s + " ") for s in COMPILERS) and
             " -c " not in cmd.bashcmd and
             "-o /dev/null" not in cmd.bashcmd and
             ".c " not in cmd.bashcmd and not cmd.bashcmd.endswith(".c"))
+        return result
 
     @staticmethod
     def apply_transformation_on(cmd, container):
         # tokenize and remove the original command
         tokens = cmd.bashcmd.split()[1:]
-
+        target = None
         # remove optimizer flags
         tokens = [t for t in tokens if t not in OPTIMIZERFLAGS]
 
@@ -35,6 +38,7 @@ class TransformCCLink(TransformerLlvm):
             if ".so" not in tokens[pos + 1]:
                 tokens[pos + 1] += EXECFILEEXTENSION
             tokens[pos + 1] += ".bc"
+            target = tokens[pos + 1]
 
         # replace -l flags, if the library was llvm-compiled earlier
         tokens = [
@@ -56,5 +60,58 @@ class TransformCCLink(TransformerLlvm):
         tokens = [t for t in tokens if not (
             any(t.startswith(start) for start in flagstarts)) or t == "-o"]
 
-        cmd.bashcmd = LLVMLINK + " " + " ".join(no_duplicates(tokens))
+        new_tokens = []
+        for dep in tokens:
+            new_tokens.append(dep)
+            if not dep.endswith(".bc"):
+                continue
+            #print("Check dependencies for " + dep)
+            for token in tokens:
+                if dep == token or not token.endswith(".bc"):
+                    continue
+                #print("lib " + token)
+                #print("     Look with " + path.basename(token))
+                dependencies = container.lib_deps.get(path.basename(token))
+                if dependencies is None:
+                    #print("     Look with " + path.basename(token[:-3]))
+                    dependencies = container.lib_deps.get(path.basename(token[:-3]))
+                if dependencies is None:
+                    #print(" No dependency")
+                    continue
+                #print("has dependency")
+                #print(dependencies)
+                for token_dep in dependencies:
+                    if dep == token_dep:
+                        #print("Remove deps")
+                        new_tokens.remove(dep)
+                        break
+                    try:
+                        cmp = filecmp.cmp(cmd.curdir + "/" + dep, cmd.curdir + "/" + token_dep)
+                        if cmp:
+                            #print("remove deps")
+                            new_tokens.remove(dep)
+                            break
+                        # else:
+                        #     print("Are not equal " + dep + "  " + token_dep)
+                    except Exception as ex:
+                        #print("can not compare files")
+                        #print(ex)
+                        continue
+
+        #[print("New token " + new_t) for new_t in new_tokens]
+        if "shared" in cmd.bashcmd or "-rdynamic" in cmd.bashcmd:
+            if "-o" in new_tokens:
+                # append .bc to the output file
+                pos = new_tokens.index("-o")
+                new_tokens[pos] = ""
+            print("Transformed cc to ar!!!")
+            if target is None:
+                print("Senc vonc klini aranc target")
+                cmd.bashcmd = LLVMAR + " qc " + " ".join(no_duplicates(new_tokens))
+            else:
+                print("bobobo")
+                new_tokens.remove(target)
+                cmd.bashcmd = LLVMAR + " qc " + target + " " + " ".join(no_duplicates(new_tokens))
+        else:
+            cmd.bashcmd = LLVMLINK + " " + " ".join(no_duplicates(new_tokens))
         return cmd

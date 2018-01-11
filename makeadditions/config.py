@@ -18,6 +18,7 @@ OPTDELETE = path.expanduser(CONFIG.get("toolchain", "optdelete", fallback=""))
 LLVMBINDIR = read_binary_directory(LLVMCONFIG)
 CLANG = path.join(LLVMBINDIR, "clang")
 LLVMLINK = path.join(LLVMBINDIR, "llvm-link")
+LLVMAR = path.join(LLVMBINDIR, "llvm-ar")
 LLVMOPT = path.join(LLVMBINDIR, "opt")
 
 

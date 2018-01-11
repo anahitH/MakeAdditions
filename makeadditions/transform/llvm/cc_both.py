@@ -20,13 +20,15 @@ class TransformCCBoth(TransformerLlvm):
 
     @staticmethod
     def can_be_applied_on(cmd):
-        return (any(cmd.bashcmd.startswith(s + " ") for s in COMPILERS) and
+        result = (any(cmd.bashcmd.startswith(s + " ") for s in COMPILERS) and
                 "-o /dev/null" not in cmd.bashcmd and
                 " -c " not in cmd.bashcmd and (
                     ".c " in cmd.bashcmd or cmd.bashcmd.endswith(".c")))
+        return result
 
     @staticmethod
     def apply_transformation_on(cmd, container):
+        print("Transform cc both " + cmd.bashcmd)
         # tokenize and remove the original command
         tokens = cmd.bashcmd.split()[1:]
 

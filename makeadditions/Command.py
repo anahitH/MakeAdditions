@@ -5,6 +5,7 @@ some additional informations.
 
 import re
 import subprocess
+from builtins import print
 from os import path
 from .config import LLVMOPT, OPTDELETE
 
@@ -49,7 +50,7 @@ class Command:
 
     def execute(self):
         """ Execute this program in a shell """
-
+        print("Execute " + self.bashcmd)
         retry = True
         offset = 0
         while retry:
@@ -57,15 +58,21 @@ class Command:
             offset += 1
             try:
                 # I know, this shell=True can be evil, but what can we do?
-                subprocess.check_output(
+                out = subprocess.check_output(
                     self.bashcmd, shell=True,
                     stderr=subprocess.STDOUT, cwd=self.curdir)
             except subprocess.CalledProcessError as exc:
+                "Failed"
                 # Try to solve link error with multiple definitions
                 linkerr = re.search(
                     "Linking globals named '([^']*)': symbol multiply defined!",
-                    exc.output.decode("utf-8"))
-                multfunc = linkerr.group(1)
+                    exc.output.decode("latin-1"))
+                if linkerr:
+                    multfunc = linkerr.group(1)
+                    print("Multiple definition " + multfunc)
+                else:
+                    print(exc.output.decode("latin-1"))
+                    exit(-1)
 
                 # This is a nasty hack, feel free to suggest improvements
                 candidates = [c for c in self.bashcmd.split()
@@ -79,15 +86,17 @@ class Command:
 
                 # Delete the double defined function
                 if linkerr and LLVMOPT and OPTDELETE:
-                    subprocess.call(
-                        [LLVMOPT, "-load", OPTDELETE, "-deletedefinition",
-                         tbcfile, "-deletefunction", multfunc,
-                         "-o", newtbcfile], cwd=self.curdir)
+                    print("Trying to fix multiple definitions error: candidate file " + tbcfile)
+                    subprocess.check_output(
+                            [LLVMOPT, "-load", OPTDELETE, "-deletedefinition",
+                             tbcfile, "-deletefunction", multfunc, "-deleteglobal", multfunc,
+                             "-o", newtbcfile], cwd=self.curdir)
                     self.bashcmd = self.bashcmd.replace(tbcfile, newtbcfile)
 
                     retry = True
                 else:
-                    print(exc.output.decode("utf-8"))
+                    print("Fail " + exc.output.decode("utf-8"))
+                    exit(-1)
                     return exc.returncode
 
         return 0

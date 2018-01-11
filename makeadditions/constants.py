@@ -5,7 +5,7 @@ Collection of constants for the different modules
 from .config import CLANG
 
 # List of all compiler alias
-COMPILERS = ["cc", "gcc", "clang", CLANG]
+COMPILERS = ["cc", "gcc", "clang", "/usr/bin/c++", "/usr/bin/cc", CLANG]
 
 # All optimizer flags in the compiler
 OPTIMIZERFLAGS = ['-O0', '-O1', '-O2', '-O3', '-Og', '-Os', '-Ofast']
