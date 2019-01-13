@@ -5,10 +5,10 @@ Collection of constants for the different modules
 from .config import CLANG
 
 # List of all compiler alias
-COMPILERS = ["cc", "gcc", "clang", "/usr/bin/c++", "/usr/bin/cc", CLANG]
+COMPILERS = ["cc", "gcc", "clang", "/usr/bin/c++", "/usr/bin/cc", "/usr/bin/gcc", CLANG]
 
 # All optimizer flags in the compiler
-OPTIMIZERFLAGS = ['-O0', '-O1', '-O2', '-O3', '-Og', '-Os', '-Ofast']
+OPTIMIZERFLAGS = ['-O0', '-O1', '-O2', '-O3', '-Og', '-Os', '-Ofast', '-O']
 
 # All flags for dependency generation
 DEPENDENCYFLAGS = ["-MD", "-MMD", "-MP", "-M", "-MM"]

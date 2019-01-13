@@ -23,6 +23,7 @@ class TransformCCCompile(TransformerLlvm):
 
     @staticmethod
     def apply_transformation_on(cmd, container):
+        print("Apply transformation on " + cmd.bashcmd)
         # tokenize and remove the original command
         tokens = cmd.bashcmd.split()[1:]
 
@@ -33,13 +34,13 @@ class TransformCCCompile(TransformerLlvm):
         tokens.insert(0, "-O0")
 
         # remove dependency emission
-        for deptoken in DEPENDENCYEMISSION:
-            if deptoken in tokens:
-                pos = tokens.index(deptoken)
-                del tokens[pos:pos + 2]
+        #for deptoken in DEPENDENCYEMISSION:
+        #    if deptoken in tokens:
+        #        pos = tokens.index(deptoken)
+        #        del tokens[pos:pos + 2]
 
         # remove dependency flags
-        tokens = [t for t in tokens if t not in DEPENDENCYFLAGS]
+        #tokens = [t for t in tokens if t not in DEPENDENCYFLAGS]
 
         # build the new command
         newcmd = CLANG + " -emit-llvm "
@@ -53,6 +54,10 @@ class TransformCCCompile(TransformerLlvm):
             pos = tokens.index("-o")
             if tokens[pos + 1].endswith(".o"):
                 tokens[pos + 1] = tokens[pos + 1][:-2] + ".bc"
+
+        for token in tokens:
+            if token.endswith(".o"):
+                token = token[:-2]+".bc"
 
         cmd.bashcmd = newcmd + " ".join(tokens)
         return cmd

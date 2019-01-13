@@ -25,6 +25,7 @@ class TransformCCLink(TransformerLlvm):
 
     @staticmethod
     def apply_transformation_on(cmd, container):
+        #print("Tranform cc_link " + cmd.bashcmd)
         # tokenize and remove the original command
         tokens = cmd.bashcmd.split()[1:]
         target = None
@@ -83,8 +84,9 @@ class TransformCCLink(TransformerLlvm):
                 for token_dep in dependencies:
                     if dep == token_dep:
                         #print("Remove deps")
-                        new_tokens.remove(dep)
-                        break
+                        if dep in new_tokens:
+                            new_tokens.remove(dep)
+                            break
                     try:
                         cmp = filecmp.cmp(cmd.curdir + "/" + dep, cmd.curdir + "/" + token_dep)
                         if cmp:

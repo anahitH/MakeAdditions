@@ -100,7 +100,7 @@ def check_debugshell_and_makefile(makeoutput):
     if (not makeoutput or
             not (makeoutput.startswith("make: Entering directory ") or
                  makeoutput.startswith("make[1]: Entering directory "))):
-        raise Exception(
+                 raise Exception(
             "Directory changes cannot be recognized: " + makeoutput[0:35])
 
 
@@ -129,6 +129,7 @@ def translate_makeannotations(makeoutput):
 
 
 def encapsulate_commands(cmdlist):
+    #print("encapsulate_commands")
     """ Encapsulate a list of command strings inside the command class.
     All necessary information is extracted meanwhile. """
 
@@ -140,11 +141,14 @@ def encapsulate_commands(cmdlist):
     assert is_make_cd_cmd(cmdlist[0])
 
     # initialize the current dir
+    if (cmdlist[0] == "cd ."):
+        exit(1)
     curdir = extract_dir_from_makecd(cmdlist[0])
 
     result = []
     for cmdstr in cmdlist:
-
+        print("encapsulate_command " + cmdstr + "\n")
+        print("current dir " + curdir + "\n")
         # separate command from comment
         if "#" in cmdstr and cmdstr.count("#") == 1:
             cmd, comment = cmdstr.split("#")
@@ -153,21 +157,23 @@ def encapsulate_commands(cmdlist):
 
         # Create the new command object
         cmdobj = Command(cmd.strip(), curdir)
+        print ("cmd created " + cmdobj.bashcmd)
 
         # add comment as an annotation
         if comment is not None:
             cmdobj.add_annotation(comment.strip())
-
+        #print("Encapsulated with " + cmdobj.bashcmd)
         result.append(cmdobj)
 
         # store the cd for the next command, if necessary
-        if is_make_cd_cmd(cmdstr):
+        if is_make_cd_cmd(cmdstr) and cmdstr is not "cd .":
             curdir = extract_dir_from_makecd(cmdstr)
 
     return result
 
 
 def extract_dir_from_makecd(cmd):
+    print("extract current dir " + cmd)
     """ Extract the directory from a translated cd of makeoutput """
     assert is_make_cd_cmd(cmd)
     if cmd.endswith(" # " + MAKEANNOTATIONHINT):

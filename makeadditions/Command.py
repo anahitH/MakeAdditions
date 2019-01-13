@@ -50,7 +50,7 @@ class Command:
 
     def execute(self):
         """ Execute this program in a shell """
-        print("Execute " + self.bashcmd)
+        print("Execute " + self.bashcmd + " in " + self.curdir)
         retry = True
         offset = 0
         while retry:
@@ -71,7 +71,11 @@ class Command:
                     multfunc = linkerr.group(1)
                     print("Multiple definition " + multfunc)
                 else:
+                    pwd_out = subprocess.check_output(
+                    "pwd", shell=True,
+                    stderr=subprocess.STDOUT, cwd=self.curdir)
                     print(exc.output.decode("latin-1"))
+                    #print(exc.pwd_out.decode("latin-1"))
                     exit(-1)
 
                 # This is a nasty hack, feel free to suggest improvements
@@ -107,4 +111,5 @@ class Command:
 
     def has_effects(self):
         """ Checks, if this command has actually no effects """
-        return not (self.is_noop() or self.is_cd())
+        return not self.is_noop()
+                    #or self.is_cd())

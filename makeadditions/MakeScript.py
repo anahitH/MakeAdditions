@@ -32,7 +32,7 @@ class MakeScript:
 
     def register(self, cmd):
         """ Extract and store informations needed by other commands """
-
+        #print("Register command " + cmd.bashcmd)
         # look for generated libraries
         lib = None
         new_lib = None
@@ -100,10 +100,10 @@ class MakeScript:
         output = run_make_with_debug_shell(makefile, targets)
 
         # Check, if the output can be translated properly
-        check_debugshell_and_makefile(output)
+        check_debugshell_and_makefile(output.decode("utf-8"))
 
         # Translate all the commands
-        cmds = translate_to_commands(output)
+        cmds = translate_to_commands(output.decode("utf-8"))
 
         # store relevant information for later commands
         # for cmd in cmds:
@@ -121,6 +121,9 @@ class MakeScript:
 
         for cmd in cmds:
             transformed_cmd = new.transform(cmd)
+            print("Transformed command")
+            print(cmd.bashcmd + " in dir " + cmd.curdir)
+            print(transformed_cmd.bashcmd + " in dir " + transformed_cmd.curdir)
             new.cmds.append(transformed_cmd)
             new.register(transformed_cmd)
 
@@ -154,6 +157,7 @@ class MakeScript:
 
         for cmd in self.cmds:
             if not cmd or not cmd.has_effects():
+                #print("Skip command with no effect " + cmd.bashcmd)
                 continue
             #print("Command here " + cmd.bashcmd)
             # Execute the commands

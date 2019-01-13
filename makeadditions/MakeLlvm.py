@@ -40,6 +40,8 @@ class MakeLlvm(MakeScript):
         elif len(applicable) == 1:
             # if exact one transformation is applicable, apply it
             return applicable[0].apply_transformation_on(cmd, self)
+            #print("Transformation applied command " + applied.bashcmd)
+            #return applied
         else:
             # if more than one transformation is applicable, the result is
             # ambiguous, so just report this error with some details
