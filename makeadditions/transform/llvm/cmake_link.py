@@ -11,11 +11,11 @@ from makeadditions.Command import Command
 
 class TransformCmakeLink(TransformerLlvm):
     """ transform ar commands """
-    cmd_prefix = "/usr/bin/cmake -E cmake_link_script "
+    cmd_prefixes = ["/usr/bin/cmake -E cmake_link_script ", "/usr/local/bin/cmake -E cmake_link_script "]
 
     @staticmethod
     def can_be_applied_on(cmd):
-        return cmd.bashcmd.startswith(TransformCmakeLink.cmd_prefix)
+        return any(cmd.bashcmd.startswith(s) for s in TransformCmakeLink.cmd_prefixes)
 
     @staticmethod
     def apply_transformation_on(cmd, container):
